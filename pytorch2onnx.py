@@ -5,13 +5,12 @@ import torch.onnx
 import onnxruntime
 print(onnxruntime.__version__)
 
-do_conversion_ = False
+do_conversion_ = True
 
-
-# model_path_ = '/home/ros/OS_TR/log/tcd_alot_dtd_OSnet_mb_large_weighted_bce_LR_0.001/snapshot-epoch_2021-12-03-18:34:12_texture.pth' # Best performance
+# model_path_ = '/home/ros/OS_TR/log/tcd_alot_dtd_OSnet_mb_large_sp_ver2_ff_weighted_bce_LR_0.0001/snapshot-epoch_2021-12-14-18_39_36_texture.pth'
 model_path_ = '/home/ros/OS_TR/log/tcd_alot_dtd_lmt_OSnet_mb_large_ver2_weighted_bce_LR_0.001/snapshot-epoch_2022_01_06_19_03_30_texture.pth'
 
-model_name_ = 'ostr_mb3_large_ver2'
+model_name_ = 'OSnet_mb_large_ver2'
 
 from utils.model import models
 model = models['OSnet_mb_large_ver2']()
@@ -33,20 +32,19 @@ torch_out = model(x1,x2)
 
 # Export the model
 if do_conversion_:
-  torch.onnx.export(model,                     # model being run
-                    (x1,x2),                         # model input (or a tuple for multiple inputs)
-                    model_name_ + ".onnx",   # where to save the model (can be a file or file-like object)
-                    export_params=True,        # store the trained parameter weights inside the model file
-                    opset_version=14,          # the ONNX version to export the model to
-                  #   do_constant_folding=True,  # whether to execute constant folding for optimization
+  torch.onnx.export(model,                               # model being run
+                    (x1,x2),                             # model input (or a tuple for multiple inputs)
+                    model_name_ + ".onnx",               # where to save the model (can be a file or file-like object)
+                    export_params=True,                  # store the trained parameter weights inside the model file
+                    opset_version=14,                    # the ONNX version to export the model to
+                  #   do_constant_folding=True,          # whether to execute constant folding for optimization
                     input_names = ['input1','input2'],   # the model's input names
-                    output_names = ['output'], # the model's output names
+                    output_names = ['output'],           # the model's output names
                   #   dynamic_axes={'input' : {0 : 'batch_size'},    # variable length axes
                   #                 'output' : {0 : 'batch_size'}}
                   )
 
-# onnx_model = onnxruntime.InferenceSession(model_name_ + ".onnx")
-onnx_model = onnxruntime.InferenceSession(model_name_ + "_shrinked" + ".onnx")
+onnx_model = onnxruntime.InferenceSession(model_name_ + ".onnx")
 
 def to_numpy(tensor):
     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
@@ -57,10 +55,8 @@ t = time.time()
 onnx_outs = onnx_model.run(None, onnx_inputs)
 elapsed = time.time() - t
 
-
 # compare ONNX Runtime and PyTorch results
-# print(np.testing.assert_allclose(to_numpy(torch_out), onnx_outs[0], rtol=1e-03, atol=1e-05))
-print("Are both model outputs similar? : ",np.allclose(to_numpy(torch_out), onnx_outs[0], rtol=1e-03, atol=1e-05))
+print("Are both model outputs similar? : ",np.allclose(to_numpy(torch_out), onnx_outs[0][0], rtol=1e-03, atol=1e-05))
 print("Saved model inference time: "+str(elapsed))
 
 fig = plt.figure(0)
