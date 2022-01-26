@@ -57,13 +57,14 @@ def to_numpy(tensor):
 
 # compute ONNX Runtime output prediction
 onnx_inputs = {onnx_model.get_inputs()[0].name: to_numpy(x1), onnx_model.get_inputs()[1].name:to_numpy(x2)}
-onnx_outs = onnx_model.run(None, onnx_inputs)
+
 t = time.time()
 onnx_outs_new = onnx_model_saved.run(None, onnx_inputs)
 elapsed = time.time() - t
+onnx_outs = onnx_model.run(None, onnx_inputs)
 
 # compare ONNX Runtime and PyTorch results
-print("Are both model outputs similar? : ",np.allclose(onnx_outs[0][0], onnx_outs_new[0][0], rtol=1e-03, atol=1e-05))
+print("Are both model outputs similar? : ",np.allclose(onnx_outs[0], onnx_outs_new[0], rtol=1e-03, atol=1e-05))
 print("Saved model inference time: "+str(elapsed))
 
 fig = plt.figure(0)
