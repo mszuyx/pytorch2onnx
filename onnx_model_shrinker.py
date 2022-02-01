@@ -72,5 +72,3 @@ imgplot = plt.imshow(np.transpose(onnx_outs_new[0][0],(1, 2, 0)))
 ax.set_title('Saved model output')
 ax.axis('off')
 plt.show()
-
-print(onnx_outs.shape)
